@@ -20,7 +20,7 @@ def generate_particles(x_min, x_max, y_min, y_max, z_min, z_max, sigma, R):
     
     particle = Particle()
     
-    h = h1 * sigma
+    h = h2 * sigma
     
     lx = x_max - x_min
     ly = y_max - y_min
@@ -140,7 +140,9 @@ def generate_particles(x_min, x_max, y_min, y_max, z_min, z_max, sigma, R):
     particle.y = np.concatenate((y_east, y_west, y_north, y_south, y_top, y_bottom))
     particle.z = np.concatenate((z_east, z_west, z_north, z_south, z_top, z_bottom))
     
-    n_bound = len(particle.x)
+    
+    particle.n_bound = len(particle.x)
+    n_bound = particle.n_bound
     particle.diameter = h * np.ones(n_bound)
     
     # Inner Sphere

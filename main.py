@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from particle import Particle
 from generate_particles import generate_particles
 from neighbor_search import neighbor_search_cell_list
+from neighbor_search_verlet import multiple_verlet
 from LSMPS import LSMPS
 from pressure_correction import calculate_dn_operator
 
@@ -24,7 +25,7 @@ z_min = 0
 z_max = 10
 z_center = 5
 sigma = 1
-cell_size = 2.1 * sigma
+cell_size = 2.1 * (sigma / 2)
 R_e = 2.1
 R = 0.5
 
@@ -57,8 +58,13 @@ print('Vol_true=',vol_true,'\t Vol_computed=', vol_computed)
 # Perform neighbor search
 #=============================================================================#
 print('Neighbor search')
-neighbor_search_cell_list(particle, cell_size, y_max, y_min, x_max, x_min, z_max, z_min)
-
+#neighbor_search_cell_list(particle, cell_size, y_max, y_min, x_max, x_min, z_max, z_min)
+n_bound = particle.n_bound
+h = particle.diameter
+rc = np.concatenate((h[:n_bound] * R_e, h[n_bound:] * R_e))
+upwind = True
+nodes_3d = np.concatenate((particle.x.reshape(-1,1), particle.y.reshape(-1,1), particle.z.reshape(-1,1)), axis = 1)
+multiple_verlet(particle, nodes_3d, n_bound, rc, upwind)
 #%%
 #=============================================================================#
 # LSMPS derivative
