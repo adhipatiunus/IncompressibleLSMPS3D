@@ -39,11 +39,12 @@ def generate_particles(x_min, x_max, y_min, y_max, z_min, z_max, sigma, R):
     # 1. East
     y = np.linspace(y_min, y_max, ny)
     z = np.linspace(z_min, z_max, nz)
+    x = np.linspace(x_min, x_max + h, 2)
     
-    y_3d, z_3d = np.meshgrid(y, z)
+    y_3d, z_3d, x_3d = np.meshgrid(y, z, x)
     y_east = y_3d.flatten()
     z_east = z_3d.flatten()
-    x_east = x_min * np.ones_like(y_east)
+    x_east = x_3d.flatten()
     
     n_east = x_east.shape[0]
     normal_x_east = np.ones(n_east)
@@ -55,11 +56,12 @@ def generate_particles(x_min, x_max, y_min, y_max, z_min, z_max, sigma, R):
     # 2. West
     y = np.linspace(y_min, y_max, ny)
     z = np.linspace(z_min, z_max, nz)
+    x = np.linspace(x_max, x_max - h, 2)
     
-    y_3d, z_3d = np.meshgrid(y, z)
+    y_3d, z_3d, x_3d = np.meshgrid(y, z, x)
     y_west = y_3d.flatten()
     z_west = z_3d.flatten()
-    x_west = x_max * np.ones_like(y_east)
+    x_west = x_3d.flatten()
     
     n_west = x_west.shape[0]
     normal_x_west = -1 * np.ones(n_east)
@@ -69,29 +71,31 @@ def generate_particles(x_min, x_max, y_min, y_max, z_min, z_max, sigma, R):
     particle.n_west = particle.n_east + len(x_west)
     
     # 3. North
-    x = np.linspace(x_min + h, x_max - h, nx-2)
+    x = np.linspace(x_min + 2 * h, x_max - 2 * h, nx-2-2)
     z = np.linspace(z_min, z_max, nz)
+    y = np.linspace(y_max, y_max - h, 2)
     
-    x_3d, y_3d = np.meshgrid(x, z)
+    x_3d, z_3d, y_3d = np.meshgrid(x, z, y)
     x_north = x_3d.flatten()
-    z_north = y_3d.flatten()
-    y_north = y_max * np.ones_like(x_north)  
+    z_north = z_3d.flatten()
+    y_north = y_3d.flatten()  
     
     n_north = y_north.shape[0]
-    normal_x_north = np.zeros(n_north)
+    normal_x_north = -1 * np.zeros(n_north)
     normal_y_north = np.ones(n_north)
     normal_z_north = np.zeros(n_north)
     
     particle.n_north = particle.n_west + len(x_north)
     
     # 4. South
-    x = np.linspace(x_min + h, x_max - h, nx-2)
+    x = np.linspace(x_min + 2 * h, x_max - 2 * h, nx-2-2)
     z = np.linspace(z_min, z_max, nz)
+    y = np.linspace(y_min, y_min + h, 2)
     
-    x_3d, y_3d = np.meshgrid(x, z)
+    x_3d, z_3d, y_3d = np.meshgrid(x, z, y)
     x_south = x_3d.flatten()
-    z_south = y_3d.flatten()
-    y_south = y_min * np.ones_like(x_south)  
+    z_south = z_3d.flatten()
+    y_south = y_3d.flatten()  
     
     n_south = y_south.shape[0]
     normal_x_south = np.zeros(n_south)
@@ -101,13 +105,14 @@ def generate_particles(x_min, x_max, y_min, y_max, z_min, z_max, sigma, R):
     particle.n_south = particle.n_north + len(x_south)
     
     # 5. Top
-    x = np.linspace(x_min + h, x_max - h, ny - 2)
-    y = np.linspace(y_min + h, y_max - h, nz - 2)
+    x = np.linspace(x_min + 2 * h, x_max - 2 * h, nx-2-2)
+    y = np.linspace(y_min + 2 * h, y_max - 2 * h, ny-2-2)
+    z = np.linspace(z_max, z_max - h, 2)
     
-    x_3d, y_3d = np.meshgrid(x, y)
+    x_3d, y_3d, z_3d = np.meshgrid(x, y, z)
     x_top = x_3d.flatten()
     y_top = y_3d.flatten()
-    z_top = z_max * np.ones_like(y_top) 
+    z_top = z_3d.flatten() 
     
     n_top = z_top.shape[0]
     normal_x_top = np.zeros(n_top)
@@ -117,13 +122,14 @@ def generate_particles(x_min, x_max, y_min, y_max, z_min, z_max, sigma, R):
     particle.n_top = particle.n_south + len(x_top)
     
     # 6. Bottom
-    x = np.linspace(x_min + h, x_max - h, ny - 2)
-    y = np.linspace(y_min + h, y_max - h, nz - 2)
+    x = np.linspace(x_min + 2 * h, x_max - 2 * h, nx-2-2)
+    y = np.linspace(y_min + 2 * h, y_max - 2 * h, ny-2-2)
+    z = np.linspace(z_min, z_min + h, 2)
     
-    x_3d, y_3d = np.meshgrid(x, y)
+    x_3d, y_3d, z_3d = np.meshgrid(x, y, z)
     x_bottom = x_3d.flatten()
     y_bottom = y_3d.flatten()
-    z_bottom = z_min * np.ones_like(y_top) 
+    z_bottom = z_3d.flatten() 
     
     particle.n_bottom = particle.n_top + len(x_bottom)
     
@@ -209,12 +215,12 @@ def generate_particles(x_min, x_max, y_min, y_max, z_min, z_max, sigma, R):
     # Outer boundary: rectangle
     h = h5
     n_layer = 3
-    X_MIN = x_min + h
-    X_MAX = x_max - h
-    Y_MIN = y_min + h
-    Y_MAX = y_max - h
-    Z_MIN = z_min + h
-    Z_MAX = z_max - h
+    X_MIN = x_min + 2 * h
+    X_MAX = x_max - 2 * h
+    Y_MIN = y_min + 2 * h
+    Y_MAX = y_max - 2 * h
+    Z_MIN = z_min + 2 * h
+    Z_MAX = z_max - 2 * h
     
     nx = int((X_MAX - X_MIN) / h) + 1
     ny = int((Y_MAX - Y_MIN) / h) + 1
@@ -297,13 +303,13 @@ def generate_particles(x_min, x_max, y_min, y_max, z_min, z_max, sigma, R):
     # Third box
     h = h2
     
-    nx = int((x_max - x_min) / h) + 1
-    ny = int((y_max - y_min) / h) + 1
-    nz = int((z_max - z_min) / h) + 1
+    nx = int((x_max - x_min) / h) + 1 - 4
+    ny = int((y_max - y_min) / h) + 1 - 4
+    nz = int((z_max - z_min) / h) + 1 - 4
     
-    x = np.linspace(x_min + h, x_max - h, nx)
-    y = np.linspace(y_min + h, y_max - h, ny)
-    z = np.linspace(z_min + h, z_max - h, nz)
+    x = np.linspace(x_min + 2 * h, x_max - 2 * h, nx)
+    y = np.linspace(y_min + 2 * h, y_max - 2 * h, ny)
+    z = np.linspace(z_min + 2 * h, z_max - 2 * h, nz)
     
     x_3d, y_3d, z_3d = np.meshgrid(x, y, z)
     

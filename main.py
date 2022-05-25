@@ -42,7 +42,7 @@ N = len(particle.x)
 mid_x = abs(particle.x - x_center)<1e-8
 plt.scatter(particle.y[mid_x], particle.z[mid_x], particle.diameter[mid_x])
 plt.axis('equal')
-
+"""
 #%%
 #=============================================================================#
 # Checking sphere volume
@@ -60,7 +60,7 @@ print('Vol_true=',vol_true,'\t Vol_computed=', vol_computed)
 print('Neighbor search')
 #neighbor_search_cell_list(particle, cell_size, y_max, y_min, x_max, x_min, z_max, z_min)
 n_bound = particle.n_bound
-h = particle.diameter
+h = particle.diameter * 2.0
 rc = np.concatenate((h[:n_bound] * R_e, h[n_bound:] * R_e))
 upwind = True
 nodes_3d = np.concatenate((particle.x.reshape(-1,1), particle.y.reshape(-1,1), particle.z.reshape(-1,1)), axis = 1)
@@ -134,6 +134,7 @@ rhs_u[idx_begin:idx_end] = 1
 idx_begin = idx_end
 idx_end = particle.n_north
 
+
 rhs_u[idx_begin:idx_end] = 1
 
 # 4. North
@@ -158,7 +159,7 @@ rhs_u[idx_begin:idx_end] = 1
 # Solving Poisson equation
 #=============================================================================#
 poisson_3d = DxxAll + DyyAll + DzzAll
-
-
+poisson_3d = np.vstack([p_bound, poisson_3d[n_bound:]])
+"""
 
 
