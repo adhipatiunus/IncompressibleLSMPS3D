@@ -42,7 +42,7 @@ N = len(particle.x)
 mid_x = abs(particle.x - x_center)<1e-8
 plt.scatter(particle.y[mid_x], particle.z[mid_x], particle.diameter[mid_x])
 plt.axis('equal')
-"""
+
 #%%
 #=============================================================================#
 # Checking sphere volume
@@ -72,7 +72,7 @@ multiple_verlet(particle, nodes_3d, n_bound, rc, upwind)
 # Calculating x derivative
 # Upwind x derivative
 print('Calculating upwind x derivative')
-EDxPos, DxxPos, DxNeg, DxxNeg = LSMPS(particle, R_e, 'x')
+DxPos, DxxPos, DxNeg, DxxNeg = LSMPS(particle, R_e, 'x')
 
 # Upwind y derivative
 print('Calculating upwind y derivative')
@@ -85,7 +85,7 @@ DzPos, DzzPos, DzNeg, DzzNeg = LSMPS(particle, R_e, 'z')
 # CDS derivative
 print('Calculating CDS derivative')
 DxAll, DyAll, DzAll, DxxAll, DxyAll, DxzAll, DyyAll, DyzAll, DzzAll = LSMPS(particle, R_e, 'all')
-
+"""
 #%%
 #=============================================================================#
 # Initializing boundary condition

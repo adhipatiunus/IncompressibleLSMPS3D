@@ -20,7 +20,7 @@ def generate_particles(x_min, x_max, y_min, y_max, z_min, z_max, sigma, R):
     
     particle = Particle()
     
-    h = h2 * sigma
+    h = h4 * sigma
     
     lx = x_max - x_min
     ly = y_max - y_min

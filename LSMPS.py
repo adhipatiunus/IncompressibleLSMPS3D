@@ -9,6 +9,7 @@ Created on Thu Jan  6 10:00:13 2022
 from generate_particles import generate_particles
 from neighbor_search import neighbor_search_cell_list
 import numpy as np
+from scipy import sparse
 
 def LSMPS(particle, R_e, typ):
     if typ == 'x':
@@ -31,16 +32,16 @@ def LSMPS(particle, R_e, typ):
 def calculate_derivative(particle, R_e, neighbor_list, typ):
     N = len(particle.x)
     b_data = [np.array([])] * N
-    EtaDx   = np.zeros((N, N))
-    EtaDy   = np.zeros((N, N))
-    EtaDz   = np.zeros((N, N))
-    EtaDxx  = np.zeros((N, N))
-    EtaDxy  = np.zeros((N, N))
-    EtaDxz  = np.zeros((N, N))
-    EtaDyy  = np.zeros((N, N))
-    EtaDyz  = np.zeros((N, N))
-    EtaDzz  = np.zeros((N, N))
-    index   = np.zeros((N, N))
+    EtaDx   = sparse.csr_matrix((N, N), dtype=np.float64)
+    EtaDy   = sparse.csr_matrix((N, N), dtype=np.float64)
+    EtaDz   = sparse.csr_matrix((N, N), dtype=np.float64)
+    EtaDxx  = sparse.csr_matrix((N, N), dtype=np.float64)
+    EtaDxy  = sparse.csr_matrix((N, N), dtype=np.float64)
+    EtaDxz  = sparse.csr_matrix((N, N), dtype=np.float64)
+    EtaDyy  = sparse.csr_matrix((N, N), dtype=np.float64)
+    EtaDyz  = sparse.csr_matrix((N, N), dtype=np.float64)
+    EtaDzz  = sparse.csr_matrix((N, N), dtype=np.float64)
+    index   = sparse.csr_matrix((N, N), dtype=np.float64)
 
     if typ == 'x' or typ == 'y' or typ == 'z':
         index_lsmps = [particle.index[i] for i in range(N) if particle.boundary[i] == False]
