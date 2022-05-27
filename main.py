@@ -14,6 +14,7 @@ from neighbor_search import neighbor_search_cell_list
 from neighbor_search_verlet import multiple_verlet
 from LSMPS import LSMPS
 from pressure_correction import calculate_dn_operator
+import json
 
 x_min = 0
 x_max = 10
@@ -25,14 +26,16 @@ z_min = 0
 z_max = 10
 z_center = 5
 sigma = 1
-cell_size = 2.1 * (sigma / 2)
-R_e = 2.1
+cell_size = 3.5 * (sigma / 2)
+R_e = 3.5
 R = 0.5
 
 particle = Particle()
 particle, normal_x_bound, normal_y_bound, normal_z_bound = generate_particles(x_min, x_max, y_min, y_max, z_min, z_max, sigma, R)
 N = len(particle.x)
 
+#%%
+NNPS = 'search'
 
 #%%
 #=============================================================================#
@@ -60,11 +63,28 @@ print('Vol_true=',vol_true,'\t Vol_computed=', vol_computed)
 print('Neighbor search')
 #neighbor_search_cell_list(particle, cell_size, y_max, y_min, x_max, x_min, z_max, z_min)
 n_bound = particle.n_bound
-h = particle.diameter * 2.0
+h = particle.diameter
 rc = np.concatenate((h[:n_bound] * R_e, h[n_bound:] * R_e))
 upwind = True
 nodes_3d = np.concatenate((particle.x.reshape(-1,1), particle.y.reshape(-1,1), particle.z.reshape(-1,1)), axis = 1)
-multiple_verlet(particle, nodes_3d, n_bound, rc, upwind)
+if NNPS == 'search':
+    multiple_verlet(particle, nodes_3d, n_bound, rc, upwind)
+else:
+    with open('neighbors_all.txt', 'r') as file:
+        particle.neighbors_all = json.load(file)
+    with open('neighbors_xneg.txt', 'r') as file:
+        particle.neighbors_xneg = json.load(file)
+    with open('neighbors_xpos.txt', 'r') as file:
+        particle.neighbors_xpos = json.load(file)
+    with open('neighbors_yneg.txt', 'r') as file:
+        particle.neighbors_yneg = json.load(file)
+    with open('neighbors_ypos.txt', 'r') as file:
+        particle.neighbors_ypos = json.load(file)
+    with open('neighbors_zneg.txt', 'r') as file:
+        particle.neighbors_zneg = json.load(file)
+    with open('neighbors_zpos.txt', 'r') as file:
+        particle.neighbors_zpos = json.load(file)
+    
 #%%
 #=============================================================================#
 # LSMPS derivative
@@ -84,7 +104,7 @@ DzPos, DzzPos, DzNeg, DzzNeg = LSMPS(particle, R_e, 'z')
 
 # CDS derivative
 print('Calculating CDS derivative')
-DxAll, DyAll, DzAll, DxxAll, DxyAll, DxzAll, DyyAll, DyzAll, DzzAll = LSMPS(particle, R_e, 'all')
+DxAll, DyAll, DzAll, DxxAll, DyyAll, DzzAll = LSMPS(particle, R_e, 'all')
 """
 #%%
 #=============================================================================#

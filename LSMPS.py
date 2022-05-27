@@ -139,6 +139,7 @@ def calculate_derivative(particle, R_e, neighbor_list, typ):
                 w_ij = 0
             M = M + w_ij * np.matmul(P, P.T)
             b_temp[j] = w_ij * P
+        print(M)
         M_inv = np.linalg.inv(M)
         MinvHrs = np.matmul(H_rs, M_inv)
         b_data[i] = b_temp
