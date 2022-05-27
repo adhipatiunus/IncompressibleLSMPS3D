@@ -372,19 +372,19 @@ def multiple_verlet(particle, nodes_2d, n_bound, input_rc_, upwind):
 
     # save one-sided (upwind) neighbors
     with open('neighbor_all.txt', 'w') as file:
-        json.dump(particle.neighbors_all, file)    
+        json.dump(particle.neighbor_all, file)    
     with open('neighbor_xneg.txt', 'w') as file:
-        json.dump(particle.neighbors_xneg, file)
+        json.dump(particle.neighbor_xneg, file)
     with open('neighbor_xpos.txt', 'w') as file:
-        json.dump(particle.neighbors_xpos, file)
+        json.dump(particle.neighbor_xpos, file)
     with open('neighbors_yneg.txt', 'w') as file:
-        json.dump(particle.neighbors_yneg, file)
+        json.dump(particle.neighbor_yneg, file)
     with open('neighbors_ypos.txt', 'w') as file:
-        json.dump(particle.neighbors_ypos, file)
+        json.dump(particle.neighbor_ypos, file)
     with open('neighbors_zneg.txt', 'w') as file:
-        json.dump(particle.neighbors_zneg, file)
+        json.dump(particle.neighbor_zneg, file)
     with open('neighbors_zpos.txt', 'w') as file:
-        json.dump(particle.neighbors_zpos, file)
+        json.dump(particle.neighbor_zpos, file)
     
     
 

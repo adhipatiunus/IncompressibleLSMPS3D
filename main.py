@@ -70,20 +70,20 @@ nodes_3d = np.concatenate((particle.x.reshape(-1,1), particle.y.reshape(-1,1), p
 if NNPS == 'search':
     multiple_verlet(particle, nodes_3d, n_bound, rc, upwind)
 else:
-    with open('neighbors_all.txt', 'r') as file:
-        particle.neighbors_all = json.load(file)
-    with open('neighbors_xneg.txt', 'r') as file:
-        particle.neighbors_xneg = json.load(file)
-    with open('neighbors_xpos.txt', 'r') as file:
-        particle.neighbors_xpos = json.load(file)
-    with open('neighbors_yneg.txt', 'r') as file:
-        particle.neighbors_yneg = json.load(file)
-    with open('neighbors_ypos.txt', 'r') as file:
-        particle.neighbors_ypos = json.load(file)
-    with open('neighbors_zneg.txt', 'r') as file:
-        particle.neighbors_zneg = json.load(file)
-    with open('neighbors_zpos.txt', 'r') as file:
-        particle.neighbors_zpos = json.load(file)
+    with open('neighbor_all.txt', 'r') as file:
+        particle.neighbor_all = json.load(file)
+    with open('neighbor_xneg.txt', 'r') as file:
+        particle.neighbor_xneg = json.load(file)
+    with open('neighbor_xpos.txt', 'r') as file:
+        particle.neighbor_xpos = json.load(file)
+    with open('neighbor_yneg.txt', 'r') as file:
+        particle.neighbor_yneg = json.load(file)
+    with open('neighbor_ypos.txt', 'r') as file:
+        particle.neighbor_ypos = json.load(file)
+    with open('neighbor_zneg.txt', 'r') as file:
+        particle.neighbor_zneg = json.load(file)
+    with open('neighbor_zpos.txt', 'r') as file:
+        particle.neighbor_zpos = json.load(file)
     
 #%%
 #=============================================================================#
