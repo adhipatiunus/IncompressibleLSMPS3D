@@ -43,7 +43,7 @@ def neighbor_search_cell_list(particle, cell_size, y_max, y_min, x_max, x_min, z
     for i in range(N):
         listx = int((particle.x[i] - x_min) / cell_size)
         listy = int((particle.y[i] - y_min) / cell_size)
-        listz = int((particle.y[i] - z_min) / cell_size)
+        listz = int((particle.z[i] - z_min) / cell_size)
         #print(particle.x[i])
         cell[listx][listy][listz].append(particle.index[i])
         

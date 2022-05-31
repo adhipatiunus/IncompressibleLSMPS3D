@@ -6,7 +6,36 @@ Created on Sat Jan  1 11:39:38 2022
 @author: adhipatiunus
 """
 import numpy as np
+import numba as nb
 
+@nb.njit
+def empty_int32_list():
+    l = [nb.int32(10)]
+    l.clear()
+    return l
+
+spec = {}
+spec['x'] = nb.float64[:]
+spec['y'] = nb.float64[:]
+spec['z'] = nb.float64[:]
+spec['index'] = nb.int32
+spec['boundary'] = nb.boolean
+spec['solid'] = nb.boolean
+spec['neighbor_all'] = empty_int32_list()
+spec['neighbor_xpos'] = empty_int32_list()
+spec['neighbor_xneg'] = empty_int32_list()
+spec['neighbor_ypos'] = empty_int32_list()
+spec['neighbor_yneg'] = empty_int32_list()
+spec['neighbor_zpos'] = empty_int32_list()
+spec['neighbor_zneg'] = empty_int32_list()
+spec['n_east'] = nb.int32
+spec['n_west'] = nb.int32
+spec['n_north'] = nb.int32
+spec['n_south'] = nb.int32
+spec['n_top'] = nb.int32
+spec['n_bottom'] = nb.int32
+
+@nb.jitclass(spec)
 class Particle:
     def __init__(self):
         self.x = np.array([])

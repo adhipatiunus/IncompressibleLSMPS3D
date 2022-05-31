@@ -70,9 +70,11 @@ def calculate_derivative(particle, R_e, neighbor_list, typ):
         
         neighbor_idx = neighbor_list[i]
         
-        idx_begin = neighbor_idx[0]
-        idx_end = neighbor_idx[-1]
-        Li = np.average(particle.diameter[idx_begin:idx_end])
+        #idx_begin = neighbor_idx[0]
+        #idx_end = neighbor_idx[-1]
+        #Li = np.average(particle.diameter[idx_begin:idx_end])
+        
+        Li = np.average(particle.diameter[neighbor_idx])
         
         idx_i = i
         x_i = particle.x[idx_i]
