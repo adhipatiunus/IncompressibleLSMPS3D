@@ -6,8 +6,7 @@ Created on Thu Jan  6 10:00:13 2022
 @author: adhipatiunus
 """
 
-from generate_particles import generate_particles
-from neighbor_search import neighbor_search_cell_list
+from numba import njit
 import numpy as np
 from scipy import sparse
 
@@ -28,7 +27,7 @@ def LSMPS(particle, R_e, typ):
         EtaDxAll, EtaDyAll, EtaDzAll, EtaDxxAll, EtaDxyAll, EtaDxzAll, EtaDyyAll, EtaDyzAll, EtaDzzAll = calculate_derivative(particle, R_e, particle.neighbor_all, 'all')
         return EtaDxAll, EtaDyAll, EtaDzAll, EtaDxxAll, EtaDxyAll, EtaDxzAll, EtaDyyAll, EtaDyzAll, EtaDzzAll
     
-    
+@njit
 def calculate_derivative(particle, R_e, neighbor_list, typ):
     N = len(particle.x)
     b_data = [np.array([])] * N
@@ -36,22 +35,22 @@ def calculate_derivative(particle, R_e, neighbor_list, typ):
     if typ == 'x' or typ == 'y' or typ == 'z':
         index_lsmps = [particle.index[i] for i in range(N) if particle.boundary[i] == False]
         if typ == 'x':
-            EtaDx   = sparse.csr_matrix((N, N), dtype=np.float64)
-            EtaDxx  = sparse.csr_matrix((N, N), dtype=np.float64)
+            EtaDx   = sparse.lil_matrix((N, N), dtype=np.float64)
+            EtaDxx  = sparse.lil_matrix((N, N), dtype=np.float64)
         elif typ == 'y':
-            EtaDy   = sparse.csr_matrix((N, N), dtype=np.float64)
-            EtaDyy  = sparse.csr_matrix((N, N), dtype=np.float64)
+            EtaDy   = sparse.lil_matrix((N, N), dtype=np.float64)
+            EtaDyy  = sparse.lil_matrix((N, N), dtype=np.float64)
         else:
-            EtaDz   = sparse.csr_matrix((N, N), dtype=np.float64)
-            EtaDzz  = sparse.csr_matrix((N, N), dtype=np.float64)
+            EtaDz   = sparse.lil_matrix((N, N), dtype=np.float64)
+            EtaDzz  = sparse.lil_matrix((N, N), dtype=np.float64)
     else:
         index_lsmps = particle.index
-        EtaDx   = sparse.csr_matrix((N, N), dtype=np.float64)
-        EtaDy   = sparse.csr_matrix((N, N), dtype=np.float64)
-        EtaDz   = sparse.csr_matrix((N, N), dtype=np.float64)
-        EtaDxx  = sparse.csr_matrix((N, N), dtype=np.float64)
-        EtaDyy  = sparse.csr_matrix((N, N), dtype=np.float64)
-        EtaDzz  = sparse.csr_matrix((N, N), dtype=np.float64)
+        EtaDx   = sparse.lil_matrix((N, N), dtype=np.float64)
+        EtaDy   = sparse.lil_matrix((N, N), dtype=np.float64)
+        EtaDz   = sparse.lil_matrix((N, N), dtype=np.float64)
+        EtaDxx  = sparse.lil_matrix((N, N), dtype=np.float64)
+        EtaDyy  = sparse.lil_matrix((N, N), dtype=np.float64)
+        EtaDzz  = sparse.lil_matrix((N, N), dtype=np.float64)
     #index_lsmps = particle.index
     
     #index_lsmps = [particle.index[i] for i in range(len(particle.x)) if particle.boundary[i] == False]
@@ -139,7 +138,6 @@ def calculate_derivative(particle, R_e, neighbor_list, typ):
                 w_ij = 0
             M = M + w_ij * np.matmul(P, P.T)
             b_temp[j] = w_ij * P
-        print(M)
         M_inv = np.linalg.inv(M)
         MinvHrs = np.matmul(H_rs, M_inv)
         b_data[i] = b_temp
