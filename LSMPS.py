@@ -6,7 +6,7 @@ Created on Thu Jan  6 10:00:13 2022
 @author: adhipatiunus
 """
 #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
-from numba import njit
+import numba as nb
 import numpy as np
 from scipy import sparse
 
@@ -27,43 +27,31 @@ def LSMPS(particle, neighbor_all, neighbor_xneg, neighbor_xpos, neighbor_yneg, n
         EtaDxAll, EtaDyAll, EtaDzAll, EtaDxxAll, EtaDyyAll, EtaDzzAll = calculate_derivative(particle, R_e, particle.neighbor_all, 'all')
         return EtaDxAll, EtaDyAll, EtaDzAll, EtaDxxAll, EtaDyyAll, EtaDzzAll
     
-@njit
+@nb.njit
 def calculate_derivative(particle, R_e, neighbor_list, typ):
     N = len(particle.x)
     b_data = [np.array([])] * N
-
-    if typ == 'x' or typ == 'y' or typ == 'z':
-        index_lsmps = np.array([particle.index[i] for i in range(N) if particle.boundary[i] == False])
-        if typ == 'x':
-            EtaDx   = sparse.lil_matrix((N, N), dtype=np.float64)
-            EtaDxx  = sparse.lil_matrix((N, N), dtype=np.float64)
-        elif typ == 'y':
-            EtaDy   = sparse.lil_matrix((N, N), dtype=np.float64)
-            EtaDyy  = sparse.lil_matrix((N, N), dtype=np.float64)
-        else:
-            EtaDz   = sparse.lil_matrix((N, N), dtype=np.float64)
-            EtaDzz  = sparse.lil_matrix((N, N), dtype=np.float64)
-    else:
-        index_lsmps = particle.index
-        EtaDx   = sparse.lil_matrix((N, N), dtype=np.float64)
-        EtaDy   = sparse.lil_matrix((N, N), dtype=np.float64)
-        EtaDz   = sparse.lil_matrix((N, N), dtype=np.float64)
-        EtaDxx  = sparse.lil_matrix((N, N), dtype=np.float64)
-        EtaDyy  = sparse.lil_matrix((N, N), dtype=np.float64)
-        EtaDzz  = sparse.lil_matrix((N, N), dtype=np.float64)
     #index_lsmps = particle.index
     
     #index_lsmps = [particle.index[i] for i in range(len(particle.x)) if particle.boundary[i] == False]
+    if typ == 'x' or typ == 'y' or typ == 'z':
+        index_lsmps = particle.index[~particle.boundary]
+        data_d = nb.typed.List()
+        data_d2 = nb.typed.List()
 
+    else:
+        index_lsmps = particle.index
+        data_dx = nb.typed.List()
+        data_dxx = nb.typed.List()
+        data_dy = nb.typed.List()
+        data_dyy = nb.typed.List()
+        data_dz = nb.typed.List()
+        data_dzz = nb.typed.List()
+    
     for i in index_lsmps:
-        if typ == 'x' or typ == 'y' or typ == 'z':
-            H_rs = np.zeros((3, 3))
-            M = np.zeros((3, 3))
-            P = np.zeros((3, 1))
-        else:
-            H_rs = np.zeros((7, 7))
-            M = np.zeros((7, 7))
-            P = np.zeros((7, 1))
+        H_rs = np.zeros((7,7))
+        M = np.zeros((7,7))
+        P = np.zeros((7,7))
         b_temp = [np.array([])] * len(neighbor_list[i])
         
         print('Calculating derivative for particle ' + str(i) + '/' + str(N))
@@ -83,18 +71,12 @@ def calculate_derivative(particle, R_e, neighbor_list, typ):
         R_i = R_e * Li
         
         H_rs[0, 0] = 1
-        
-        if typ == 'x' or typ == 'y' or typ == 'z':
-            H_rs[1, 1] = Li**-1 # Dx / Dy / Dz
-            H_rs[2, 2] = 2 * Li**-2 # Dxx / Dyy/ Dzz
-            
-        else:
-            H_rs[1, 1] = Li**-1 # Dx
-            H_rs[2, 2] = Li**-1 # Dy
-            H_rs[3, 3] = Li**-1 # Dz
-            H_rs[4, 4] = 2 * Li**-2 # Dxx
-            H_rs[5, 5] = 2 * Li**-2 #Dyy
-            H_rs[6, 6] = 2 * Li**-2 # Dzz
+        H_rs[1, 1] = Li**-1 # Dx
+        H_rs[2, 2] = Li**-1 # Dy
+        H_rs[3, 3] = Li**-1 # Dz
+        H_rs[4, 4] = 2 * Li**-2 # Dxx
+        H_rs[5, 5] = 2 * Li**-2 #Dyy
+        H_rs[6, 6] = 2 * Li**-2 # Dzz
         
         for j in range(len(neighbor_idx)):
             idx_j = neighbor_idx[j]
@@ -115,24 +97,12 @@ def calculate_derivative(particle, R_e, neighbor_list, typ):
             p_z = z_ij / Li
             
             P[0, 0] = 1.0
-            
-            if typ == 'x':
-                P[1, 0] = p_x # Dx
-                P[2, 0] = p_x**2 # Dxx
-                
-            elif typ == 'y':
-                P[1, 0] = p_y # Dy
-                P[2, 0] = p_y**2 # Dyy
-            elif typ == 'z':
-                P[1, 0] = p_z # Dz
-                P[2, 0] = p_z**2 # Dzz
-            else:
-                P[1, 0] = p_x # Dx
-                P[2, 0] = p_y # Dy
-                P[3, 0] = p_z # Dz
-                P[4, 0] = p_x**2 # Dxx
-                P[5, 0] = p_y**2 # Dyy
-                P[6, 0] = p_z**2 # Dzz
+            P[1, 0] = p_x # Dx
+            P[2, 0] = p_y # Dy
+            P[3, 0] = p_z # Dz
+            P[4, 0] = p_x**2 # Dxx
+            P[5, 0] = p_y**2 # Dyy
+            P[6, 0] = p_z**2 # Dzz
                        
             if r_ij < R_ij:
                 w_ij = (1 - r_ij/R_ij)**2
@@ -144,36 +114,72 @@ def calculate_derivative(particle, R_e, neighbor_list, typ):
         MinvHrs = np.matmul(H_rs, M_inv)
         b_data[i] = b_temp
         
+        if typ == 'x' or typ == 'y' or typ == 'z':
+            element_d = nb.typed.List()
+            element_d2 = nb.typed.List()
+
+        else:
+            element_dx = nb.typed.List()
+            element_dxx = nb.typed.List()
+            element_dy = nb.typed.List()
+            element_dyy = nb.typed.List()
+            element_dz = nb.typed.List()
+            element_dzz = nb.typed.List()
+        
         for j in range(len(neighbor_idx)):
             idx_j = neighbor_idx[j]
             #i[indexdx_i].append(idx_j)
             Eta = np.matmul(MinvHrs, b_data[i][j])
             
-            if typ == 'x':
-                EtaDx[idx_i,idx_j] = Eta[1]
-                EtaDxx[idx_i, idx_j] = Eta[2]
+            if typ == 'x':               
+                #EtaDx[idx_i,idx_j] = Eta[1]
+                #EtaDxx[idx_i, idx_j] = Eta[2]
+                element_d.append(Eta[1])
+                element_d2.append(Eta[4])
             elif typ == 'y':
-                EtaDy[idx_i,idx_j] = Eta[1]
-                EtaDyy[idx_i, idx_j] = Eta[2]
+                #EtaDy[idx_i,idx_j] = Eta[1]
+                #EtaDyy[idx_i, idx_j] = Eta[2]
+                element_d.append(Eta[2])
+                element_d2.append(Eta[5])
             elif typ == 'z':
-                EtaDz[idx_i, idx_j] = Eta[1]
-                EtaDzz[idx_i, idx_j] = Eta[2]
+                #EtaDz[idx_i, idx_j] = Eta[1]
+                #EtaDzz[idx_i, idx_j] = Eta[2]
+                element_d.append(Eta[3])
+                element_d2.append(Eta[6])
             else:
-                EtaDx[idx_i,idx_j] = Eta[1]
-                EtaDy[idx_i,idx_j] = Eta[2]
-                EtaDz[idx_i, idx_j] = Eta[3]
-                EtaDxx[idx_i, idx_j] = Eta[4]
-                EtaDyy[idx_i, idx_j] = Eta[5]
-                EtaDzz[idx_i, idx_j] = Eta[6]
+                #EtaDx[idx_i,idx_j] = Eta[1]
+                #EtaDy[idx_i,idx_j] = Eta[2]
+                #EtaDz[idx_i, idx_j] = Eta[3]
+                #EtaDxx[idx_i, idx_j] = Eta[4]
+                #EtaDyy[idx_i, idx_j] = Eta[5]
+                #EtaDzz[idx_i, idx_j] = Eta[6]
+                element_dx.append(Eta[1])
+                element_dy.append(Eta[2])
+                element_dz.append(Eta[3])
+                element_dxx.append(Eta[4])
+                element_dyy.append(Eta[5])
+                element_dzz.append(Eta[6])
+                
+        if typ == 'x' or typ == 'y' or typ == 'z':
+            data_d.append(element_d)
+            data_d2.append(element_d2)
+
+        else:
+            data_dx.append(element_dx)
+            data_dxx.append(element_dx)
+            data_dy.append(element_dy)
+            data_dyy.append(element_dyy)
+            data_dz.append(element_dz)
+            data_dzz.append(element_dzz)
             
     if typ == 'all':
-        return EtaDx, EtaDy, EtaDz, EtaDxx, EtaDyy, EtaDzz
+        return data_dx, data_dy, data_dz, data_dxx, data_dyy, data_dzz
     elif typ == 'x':
-        return EtaDx, EtaDxx
+        return data_dx, data_dxx
     elif typ == 'y':
-        return EtaDy, EtaDyy
+        return data_dy, data_dyy
     elif typ == 'z':
-        return EtaDz, EtaDzz
+        return data_dz, data_dzz
         
       
 
