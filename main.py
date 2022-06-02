@@ -15,6 +15,7 @@ from neighbor_search_verlet import multiple_verlet
 from LSMPS import LSMPS
 from pressure_correction import calculate_dn_operator
 import json
+import numba as nb
 
 x_min = 0
 x_max = 10
@@ -68,7 +69,7 @@ rc = np.concatenate((h[:n_bound] * R_e, h[n_bound:] * R_e))
 upwind = True
 nodes_3d = np.concatenate((particle.x.reshape(-1,1), particle.y.reshape(-1,1), particle.z.reshape(-1,1)), axis = 1)
 if NNPS == 'search':
-    multiple_verlet(particle, nodes_3d, n_bound, rc, upwind)
+    neighbor_all, neighbor_xneg, neighbor_xpos, neighbor_yneg, neighbor_ypos, neighbor_zneg, neighbor_zpos = multiple_verlet(particle, nodes_3d, n_bound, rc, upwind)
 else:
     with open('neighbor_all.txt', 'r') as file:
         particle.neighbor_all = json.load(file)
@@ -84,6 +85,14 @@ else:
         particle.neighbor_zneg = json.load(file)
     with open('neighbor_zpos.txt', 'r') as file:
         particle.neighbor_zpos = json.load(file)
+        
+neighbor_all = nb.typed.List(neighbor_all)
+neighbor_xneg = nb.typed.List(neighbor_xneg)
+neighbor_xpos = nb.typed.List(neighbor_xpos)
+neighbor_yneg = nb.typed.List(neighbor_yneg)
+neighbor_ypos = nb.typed.List(neighbor_ypos)
+neighbor_zneg = nb.typed.List(neighbor_zneg)
+neighbor_zpos = nb.typed.List(neighbor_zpos)
     
 #%%
 #=============================================================================#
@@ -92,19 +101,19 @@ else:
 # Calculating x derivative
 # Upwind x derivative
 print('Calculating upwind x derivative')
-DxPos, DxxPos, DxNeg, DxxNeg = LSMPS(particle, R_e, 'x')
+DxPos, DxxPos, DxNeg, DxxNeg = LSMPS(particle, neighbor_all, neighbor_xneg, neighbor_xpos, neighbor_yneg, neighbor_ypos, neighbor_zneg, neighbor_zpos, R_e, 'x')
 
 # Upwind y derivative
 print('Calculating upwind y derivative')
-DyPos, DyyPos, DyNeg, DyyNeg = LSMPS(particle, R_e, 'y')
+DyPos, DyyPos, DyNeg, DyyNeg = LSMPS(particle, neighbor_all, neighbor_xneg, neighbor_xpos, neighbor_yneg, neighbor_ypos, neighbor_zneg, neighbor_zpos, R_e, 'y')
 
 # Upwind z derivative
 print('Calculating upwind z derivative')
-DzPos, DzzPos, DzNeg, DzzNeg = LSMPS(particle, R_e, 'z')
+DzPos, DzzPos, DzNeg, DzzNeg = LSMPS(particle, neighbor_all, neighbor_xneg, neighbor_xpos, neighbor_yneg, neighbor_ypos, neighbor_zneg, neighbor_zpos, R_e, 'z')
 
 # CDS derivative
 print('Calculating CDS derivative')
-DxAll, DyAll, DzAll, DxxAll, DyyAll, DzzAll = LSMPS(particle, R_e, 'all')
+DxAll, DyAll, DzAll, DxxAll, DyyAll, DzzAll = LSMPS(particle, R_e, neighbor_all, neighbor_xneg, neighbor_xpos, neighbor_yneg, neighbor_ypos, neighbor_zneg, neighbor_zpos, 'all')
 """
 #%%
 #=============================================================================#

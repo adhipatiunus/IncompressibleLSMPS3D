@@ -220,14 +220,14 @@ def multiple_verlet(particle, nodes_2d, n_bound, input_rc_, upwind):
     n_total = nodes_2d.shape[0]
     # initialize matrix to store neighbors idx and number of neighs
     # neighbors_2d = np.empty((n_total,max_n_neigh), dtype=int) 
-    particle.neighbor_all = [[] for i in range(n_total)]
+    neighbor_all = [[] for i in range(n_total)]
     if upwind:
-        particle.neighbor_xpos = [[] for i in range(n_total)]
-        particle.neighbor_xneg = [[] for i in range(n_total)]
-        particle.neighbor_ypos = [[] for i in range(n_total)]
-        particle.neighbor_yneg = [[] for i in range(n_total)]
-        particle.neighbor_zpos = [[] for i in range(n_total)]
-        particle.neighbor_zneg = [[] for i in range(n_total)]
+        neighbor_xpos = [[] for i in range(n_total)]
+        neighbor_xneg = [[] for i in range(n_total)]
+        neighbor_ypos = [[] for i in range(n_total)]
+        neighbor_yneg = [[] for i in range(n_total)]
+        neighbor_zpos = [[] for i in range(n_total)]
+        neighbor_zneg = [[] for i in range(n_total)]
     n_neigh_ = np.zeros((n_total) , dtype=int)
 
     #* 2 kinds of problem may occur
@@ -341,7 +341,7 @@ def multiple_verlet(particle, nodes_2d, n_bound, input_rc_, upwind):
                 l2 = np.linalg.norm(ij_)
                 if l2 <= rc+skin:
                     # neighbors_2d[i,n_neigh_[i]] = j
-                    particle.neighbor_all[i].append(j)
+                    neighbor_all[i].append(j)
                     n_neigh_[i] = n_neigh_[i] + 1
                     # h_l2_[i] += l2 # compute and add l2 distance of each neighbor 
                     # h_l1_[i] += np.linalg.norm(ij_,1)  # compute and add l1 distance of each neighbor 
@@ -349,17 +349,17 @@ def multiple_verlet(particle, nodes_2d, n_bound, input_rc_, upwind):
                     if upwind:
                         # one-sided neighbors
                         if ij_[0] >= -1e-12: # x-neg
-                            particle.neighbor_xneg[i].append(j)
+                            neighbor_xneg[i].append(j)
                         if ij_[0] <= 1e-12: # x-pos
-                            particle.neighbor_xpos[i].append(j)
+                            neighbor_xpos[i].append(j)
                         if ij_[1] >= -1e-12: # y-neg
-                            particle.neighbor_yneg[i].append(j)
+                            neighbor_yneg[i].append(j)
                         if ij_[1] <= 1e-12: # y-pos
-                            particle.neighbor_ypos[i].append(j)
+                            neighbor_ypos[i].append(j)
                         if ij_[2] >= -1e-12: # z-neg
-                            particle.neighbor_zneg[i].append(j)
+                            neighbor_zneg[i].append(j)
                         if ij_[2] <= 1e-12: # z-pos
-                            particle.neighbor_zpos[i].append(j)
+                            neighbor_zpos[i].append(j)
     # np.save("h_l1_.npy", h_l1_)
     # np.save("h_l2_.npy", h_l2_)
     # h_ = np.load('h_.npy')
@@ -372,20 +372,21 @@ def multiple_verlet(particle, nodes_2d, n_bound, input_rc_, upwind):
 
     # save one-sided (upwind) neighbors
     with open('neighbor_all.txt', 'w') as file:
-        json.dump(particle.neighbor_all, file)    
+        json.dump(neighbor_all, file)    
     with open('neighbor_xneg.txt', 'w') as file:
-        json.dump(particle.neighbor_xneg, file)
+        json.dump(neighbor_xneg, file)
     with open('neighbor_xpos.txt', 'w') as file:
-        json.dump(particle.neighbor_xpos, file)
+        json.dump(neighbor_xpos, file)
     with open('neighbors_yneg.txt', 'w') as file:
-        json.dump(particle.neighbor_yneg, file)
+        json.dump(neighbor_yneg, file)
     with open('neighbors_ypos.txt', 'w') as file:
-        json.dump(particle.neighbor_ypos, file)
+        json.dump(neighbor_ypos, file)
     with open('neighbors_zneg.txt', 'w') as file:
         json.dump(particle.neighbor_zneg, file)
     with open('neighbors_zpos.txt', 'w') as file:
-        json.dump(particle.neighbor_zpos, file)
+        json.dump(neighbor_zpos, file)
     
+    return neighbor_all, neighbor_xneg, neighbor_xpos, neighbor_yneg, neighbor_ypos, neighbor_zneg, neighbor_zpos
     
 
     # neighbors_xpos_2d, neighbors_xneg_2d, neighbors_ypos_2d, neighbors_yneg_2d, neighbors_zpos_2d, neighbors_zneg_2d, 

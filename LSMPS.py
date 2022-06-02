@@ -10,22 +10,22 @@ from numba import njit
 import numpy as np
 from scipy import sparse
 
-def LSMPS(particle, R_e, typ):
+def LSMPS(particle, neighbor_all, neighbor_xneg, neighbor_xpos, neighbor_yneg, neighbor_ypos, neighbor_zneg, neighbor_zpos, R_e, typ):
     if typ == 'x':
-        EtaDxPos, EtaDxxPos = calculate_derivative(particle, R_e, particle.neighbor_xpos, 'x')
-        EtaDxNeg, EtaDxxNeg = calculate_derivative(particle, R_e, particle.neighbor_xneg, 'x')
+        EtaDxPos, EtaDxxPos = calculate_derivative(particle, R_e, neighbor_xpos, 'x')
+        EtaDxNeg, EtaDxxNeg = calculate_derivative(particle, R_e, neighbor_xneg, 'x')
         return EtaDxPos, EtaDxxPos, EtaDxNeg, EtaDxxNeg
     if typ == 'y':
-        EtaDyPos, EtaDyyPos = calculate_derivative(particle, R_e, particle.neighbor_ypos, 'y')
-        EtaDyNeg, EtaDyyNeg = calculate_derivative(particle, R_e, particle.neighbor_yneg, 'y')
+        EtaDyPos, EtaDyyPos = calculate_derivative(particle, R_e, neighbor_ypos, 'y')
+        EtaDyNeg, EtaDyyNeg = calculate_derivative(particle, R_e, neighbor_yneg, 'y')
         return EtaDyPos, EtaDyyPos, EtaDyNeg, EtaDyyNeg
     if typ == 'z':
-        EtaDzPos, EtaDzzPos = calculate_derivative(particle, R_e, particle.neighbor_zpos, 'y')
-        EtaDzNeg, EtaDzzNeg = calculate_derivative(particle, R_e, particle.neighbor_zneg, 'y')
+        EtaDzPos, EtaDzzPos = calculate_derivative(particle, R_e, neighbor_zpos, 'y')
+        EtaDzNeg, EtaDzzNeg = calculate_derivative(particle, R_e, neighbor_zneg, 'y')
         return EtaDzPos, EtaDzzPos, EtaDzNeg, EtaDzzNeg
     if typ == 'all':
-        EtaDxAll, EtaDyAll, EtaDzAll, EtaDxxAll, EtaDxyAll, EtaDxzAll, EtaDyyAll, EtaDyzAll, EtaDzzAll = calculate_derivative(particle, R_e, particle.neighbor_all, 'all')
-        return EtaDxAll, EtaDyAll, EtaDzAll, EtaDxxAll, EtaDxyAll, EtaDxzAll, EtaDyyAll, EtaDyzAll, EtaDzzAll
+        EtaDxAll, EtaDyAll, EtaDzAll, EtaDxxAll, EtaDyyAll, EtaDzzAll = calculate_derivative(particle, R_e, particle.neighbor_all, 'all')
+        return EtaDxAll, EtaDyAll, EtaDzAll, EtaDxxAll, EtaDyyAll, EtaDzzAll
     
 @njit
 def calculate_derivative(particle, R_e, neighbor_list, typ):
