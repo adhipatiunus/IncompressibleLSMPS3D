@@ -16,6 +16,7 @@ from LSMPS import LSMPS
 from pressure_correction import calculate_dn_operator
 import json
 import numba as nb
+import time
 
 x_min = 0
 x_max = 10
@@ -36,7 +37,7 @@ particle, normal_x_bound, normal_y_bound, normal_z_bound = generate_particles(x_
 N = len(particle.x)
 
 #%%
-NNPS = 'search'
+NNPS = 'load'
 
 #%%
 #=============================================================================#
@@ -71,21 +72,27 @@ nodes_3d = np.concatenate((particle.x.reshape(-1,1), particle.y.reshape(-1,1), p
 if NNPS == 'search':
     neighbor_all, neighbor_xneg, neighbor_xpos, neighbor_yneg, neighbor_ypos, neighbor_zneg, neighbor_zpos = multiple_verlet(particle, nodes_3d, n_bound, rc, upwind)
 else:
+    start = time.time()
     with open('neighbor_all.txt', 'r') as file:
-        particle.neighbor_all = json.load(file)
+        neighbor_all = json.load(file)
+    print('loaded neighbor in all direction')
     with open('neighbor_xneg.txt', 'r') as file:
-        particle.neighbor_xneg = json.load(file)
+        neighbor_xneg = json.load(file)
     with open('neighbor_xpos.txt', 'r') as file:
-        particle.neighbor_xpos = json.load(file)
+        neighbor_xpos = json.load(file)
+    print('loaded neighbor in x direction')
     with open('neighbor_yneg.txt', 'r') as file:
-        particle.neighbor_yneg = json.load(file)
+        neighbor_yneg = json.load(file)
     with open('neighbor_ypos.txt', 'r') as file:
-        particle.neighbor_ypos = json.load(file)
+        neighbor_ypos = json.load(file)
+    print('loaded neighbor in y direction')
     with open('neighbor_zneg.txt', 'r') as file:
-        particle.neighbor_zneg = json.load(file)
+        neighbor_zneg = json.load(file)
     with open('neighbor_zpos.txt', 'r') as file:
-        particle.neighbor_zpos = json.load(file)
-        
+        neighbor_zpos = json.load(file)
+    print('loaded neighbor in z direction')
+    print('Loaded neighbor in ' + str(time.time() - start) + 's')
+print('Converting list to typed list')
 neighbor_all = nb.typed.List(neighbor_all)
 neighbor_xneg = nb.typed.List(neighbor_xneg)
 neighbor_xpos = nb.typed.List(neighbor_xpos)

@@ -382,7 +382,7 @@ def multiple_verlet(particle, nodes_2d, n_bound, input_rc_, upwind):
     with open('neighbors_ypos.txt', 'w') as file:
         json.dump(neighbor_ypos, file)
     with open('neighbors_zneg.txt', 'w') as file:
-        json.dump(particle.neighbor_zneg, file)
+        json.dump(neighbor_zneg, file)
     with open('neighbors_zpos.txt', 'w') as file:
         json.dump(neighbor_zpos, file)
     

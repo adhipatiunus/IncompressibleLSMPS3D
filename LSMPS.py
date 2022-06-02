@@ -33,7 +33,7 @@ def calculate_derivative(particle, R_e, neighbor_list, typ):
     b_data = [np.array([])] * N
 
     if typ == 'x' or typ == 'y' or typ == 'z':
-        index_lsmps = [particle.index[i] for i in range(N) if particle.boundary[i] == False]
+        index_lsmps = np.array([particle.index[i] for i in range(N) if particle.boundary[i] == False])
         if typ == 'x':
             EtaDx   = sparse.lil_matrix((N, N), dtype=np.float64)
             EtaDxx  = sparse.lil_matrix((N, N), dtype=np.float64)
@@ -68,7 +68,7 @@ def calculate_derivative(particle, R_e, neighbor_list, typ):
         
         print('Calculating derivative for particle ' + str(i) + '/' + str(N))
         
-        neighbor_idx = neighbor_list[i]
+        neighbor_idx = np.array(neighbor_list[i])
         
         #idx_begin = neighbor_idx[0]
         #idx_end = neighbor_idx[-1]
