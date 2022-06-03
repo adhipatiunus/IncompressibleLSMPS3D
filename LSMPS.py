@@ -11,58 +11,66 @@ import numpy as np
 from scipy import sparse
 
 def LSMPS(particle, neighbor_all, neighbor_xneg, neighbor_xpos, neighbor_yneg, neighbor_ypos, neighbor_zneg, neighbor_zpos, R_e, typ):
-    if typ == 'x':
-        EtaDxPos, EtaDxxPos = calculate_derivative(particle, R_e, neighbor_xpos, 'x')
-        EtaDxNeg, EtaDxxNeg = calculate_derivative(particle, R_e, neighbor_xneg, 'x')
-        return EtaDxPos, EtaDxxPos, EtaDxNeg, EtaDxxNeg
-    if typ == 'y':
-        EtaDyPos, EtaDyyPos = calculate_derivative(particle, R_e, neighbor_ypos, 'y')
-        EtaDyNeg, EtaDyyNeg = calculate_derivative(particle, R_e, neighbor_yneg, 'y')
-        return EtaDyPos, EtaDyyPos, EtaDyNeg, EtaDyyNeg
-    if typ == 'z':
-        EtaDzPos, EtaDzzPos = calculate_derivative(particle, R_e, neighbor_zpos, 'y')
-        EtaDzNeg, EtaDzzNeg = calculate_derivative(particle, R_e, neighbor_zneg, 'y')
-        return EtaDzPos, EtaDzzPos, EtaDzNeg, EtaDzzNeg
     if typ == 'all':
-        EtaDxAll, EtaDyAll, EtaDzAll, EtaDxxAll, EtaDyyAll, EtaDzzAll = calculate_derivative(particle, R_e, particle.neighbor_all, 'all')
+        EtaDxAll, EtaDyAll, EtaDzAll, EtaDxxAll, EtaDyyAll, EtaDzzAll = calculate_derivative_CDS(particle, R_e, neighbor_all, 'all')
+        return EtaDxAll, EtaDyAll, EtaDzAll, EtaDxxAll, EtaDyyAll, EtaDzzAll
+@nb.njit   
+def LSMPS_test(particle, neighbor_all, index_end, R_e, typ):
+    if typ == 'all':
+        EtaDxAll, EtaDyAll, EtaDzAll, EtaDxxAll, EtaDyyAll, EtaDzzAll = calculate_derivative_CDS(particle, R_e, neighbor_all, index_end, 'all')
         return EtaDxAll, EtaDyAll, EtaDzAll, EtaDxxAll, EtaDyyAll, EtaDzzAll
     
 @nb.njit
-def calculate_derivative(particle, R_e, neighbor_list, typ):
+def calculate_derivative_CDS(particle, R_e, neighbor_list, index_end, typ):
     N = len(particle.x)
-    b_data = [np.array([])] * N
+    #b_data = [np.array([])] * N
     #index_lsmps = particle.index
     
     #index_lsmps = [particle.index[i] for i in range(len(particle.x)) if particle.boundary[i] == False]
     if typ == 'x' or typ == 'y' or typ == 'z':
         index_lsmps = particle.index[~particle.boundary]
-        data_d = nb.typed.List()
-        data_d2 = nb.typed.List()
-
     else:
         index_lsmps = particle.index
-        data_dx = nb.typed.List()
-        data_dxx = nb.typed.List()
-        data_dy = nb.typed.List()
-        data_dyy = nb.typed.List()
-        data_dz = nb.typed.List()
-        data_dzz = nb.typed.List()
+        
+    n_data = len(neighbor_list)
+    
+    data_dx = np.ones(n_data)
+    data_dxx = np.ones(n_data)
+    data_dy = np.ones(n_data)
+    data_dyy = np.ones(n_data)
+    data_dz = np.ones(n_data)
+    data_dzz = np.ones(n_data)
+    
+    start = int(0)
     
     for i in index_lsmps:
+        end = index_end[i]
+        
+        n_neighbor = end - start
+        
         H_rs = np.zeros((7,7))
         M = np.zeros((7,7))
-        P = np.zeros((7,7))
-        b_temp = [np.array([])] * len(neighbor_list[i])
+        P = np.zeros((7,1))
+        b_temp = [np.zeros((7,1))] * n_neighbor
         
         print('Calculating derivative for particle ' + str(i) + '/' + str(N))
         
-        neighbor_idx = np.array(neighbor_list[i])
+        neighbor_idx = neighbor_list[start:end]
+        
+        #print(np.dtype(neighbor_idx[0]))
+        
+        #neighbor_idx = neighbor_list[start:end]
         
         #idx_begin = neighbor_idx[0]
         #idx_end = neighbor_idx[-1]
         #Li = np.average(particle.diameter[idx_begin:idx_end])
         
-        Li = np.average(particle.diameter[neighbor_idx])
+        Li = np.mean(particle.diameter[neighbor_idx])
+        
+        #Li = 0
+        #for j in range(start, end):
+        #    Li += particle.diameter[j]
+        #Li = Li / (end - start)
         
         idx_i = i
         x_i = particle.x[idx_i]
@@ -108,79 +116,24 @@ def calculate_derivative(particle, R_e, neighbor_list, typ):
                 w_ij = (1 - r_ij/R_ij)**2
             else:
                 w_ij = 0
-            M = M + w_ij * np.matmul(P, P.T)
+            M = M + w_ij * np.dot(P, P.T)
             b_temp[j] = w_ij * P
         M_inv = np.linalg.inv(M)
-        MinvHrs = np.matmul(H_rs, M_inv)
-        b_data[i] = b_temp
-        
-        if typ == 'x' or typ == 'y' or typ == 'z':
-            element_d = nb.typed.List()
-            element_d2 = nb.typed.List()
-
-        else:
-            element_dx = nb.typed.List()
-            element_dxx = nb.typed.List()
-            element_dy = nb.typed.List()
-            element_dyy = nb.typed.List()
-            element_dz = nb.typed.List()
-            element_dzz = nb.typed.List()
-        
-        for j in range(len(neighbor_idx)):
+        MinvHrs = np.dot(H_rs, M_inv)
+        """
+        for j in range(start, end):
             idx_j = neighbor_idx[j]
             #i[indexdx_i].append(idx_j)
-            Eta = np.matmul(MinvHrs, b_data[i][j])
+            Eta = np.dot(MinvHrs, b_temp[j])
             
-            if typ == 'x':               
-                #EtaDx[idx_i,idx_j] = Eta[1]
-                #EtaDxx[idx_i, idx_j] = Eta[2]
-                element_d.append(Eta[1])
-                element_d2.append(Eta[4])
-            elif typ == 'y':
-                #EtaDy[idx_i,idx_j] = Eta[1]
-                #EtaDyy[idx_i, idx_j] = Eta[2]
-                element_d.append(Eta[2])
-                element_d2.append(Eta[5])
-            elif typ == 'z':
-                #EtaDz[idx_i, idx_j] = Eta[1]
-                #EtaDzz[idx_i, idx_j] = Eta[2]
-                element_d.append(Eta[3])
-                element_d2.append(Eta[6])
-            else:
-                #EtaDx[idx_i,idx_j] = Eta[1]
-                #EtaDy[idx_i,idx_j] = Eta[2]
-                #EtaDz[idx_i, idx_j] = Eta[3]
-                #EtaDxx[idx_i, idx_j] = Eta[4]
-                #EtaDyy[idx_i, idx_j] = Eta[5]
-                #EtaDzz[idx_i, idx_j] = Eta[6]
-                element_dx.append(Eta[1])
-                element_dy.append(Eta[2])
-                element_dz.append(Eta[3])
-                element_dxx.append(Eta[4])
-                element_dyy.append(Eta[5])
-                element_dzz.append(Eta[6])
-                
-        if typ == 'x' or typ == 'y' or typ == 'z':
-            data_d.append(element_d)
-            data_d2.append(element_d2)
-
-        else:
-            data_dx.append(element_dx)
-            data_dxx.append(element_dx)
-            data_dy.append(element_dy)
-            data_dyy.append(element_dyy)
-            data_dz.append(element_dz)
-            data_dzz.append(element_dzz)
-            
-    if typ == 'all':
-        return data_dx, data_dy, data_dz, data_dxx, data_dyy, data_dzz
-    elif typ == 'x':
-        return data_dx, data_dxx
-    elif typ == 'y':
-        return data_dy, data_dyy
-    elif typ == 'z':
-        return data_dz, data_dzz
-        
+            data_dx[j] = Eta[1] 
+            data_dxx[j] = Eta[2]
+            data_dy[j] = Eta[3]
+            data_dyy[j] = Eta[4]
+            data_dz[j] = Eta[5]
+            data_dzz[j] = Eta[6]
+        """
+    return data_dx, data_dy, data_dz, data_dxx, data_dyy, data_dzz  
       
 
 

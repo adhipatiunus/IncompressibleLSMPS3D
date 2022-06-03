@@ -19,14 +19,14 @@ import numba as nb
 import time
 
 x_min = 0
-x_max = 10
-x_center = 5
+x_max = 4
+x_center = 2
 y_min = 0
-y_max = 10
-y_center = 5
+y_max = 4
+y_center = 2
 z_min = 0
-z_max = 10
-z_center = 5
+z_max = 4
+z_center = 2
 sigma = 1
 cell_size = 3.5 * (sigma / 2)
 R_e = 3.5
@@ -37,7 +37,7 @@ particle, normal_x_bound, normal_y_bound, normal_z_bound = generate_particles(x_
 N = len(particle.x)
 
 #%%
-NNPS = 'load'
+NNPS = 'search'
 
 #%%
 #=============================================================================#
@@ -92,37 +92,43 @@ else:
         neighbor_zpos = json.load(file)
     print('loaded neighbor in z direction')
     print('Loaded neighbor in ' + str(time.time() - start) + 's')
-print('Converting list to typed list')
-neighbor_all = nb.typed.List(neighbor_all)
-neighbor_xneg = nb.typed.List(neighbor_xneg)
-neighbor_xpos = nb.typed.List(neighbor_xpos)
-neighbor_yneg = nb.typed.List(neighbor_yneg)
-neighbor_ypos = nb.typed.List(neighbor_ypos)
-neighbor_zneg = nb.typed.List(neighbor_zneg)
-neighbor_zpos = nb.typed.List(neighbor_zpos)
+#%%
+neighbor_len = np.array([len(n) for n in neighbor_all])
+neighbor_all_flattened = np.array([i for sub in neighbor_all for i in sub], dtype = np.int64)
+index_end = np.array([np.sum(neighbor_len[:i]) for i in range(1, N+1)], dtype = np.int64)
+#print('Converting list to typed list')
+#neighbor_all = nb.typed.List(neighbor_all)
+#neighbor_xneg = nb.typed.List(neighbor_xneg)
+#neighbor_xpos = nb.typed.List(neighbor_xpos)
+#neighbor_yneg = nb.typed.List(neighbor_yneg)
+#neighbor_ypos = nb.typed.List(neighbor_ypos)
+#neighbor_zneg = nb.typed.List(neighbor_zneg)
+#neighbor_zpos = nb.typed.List(neighbor_zpos)
     
 #%%
 #=============================================================================#
 # LSMPS derivative
 #=============================================================================#
+from LSMPS import LSMPS_test
 # Calculating x derivative
 # Upwind x derivative
-print('Calculating upwind x derivative')
-DxPos, DxxPos, DxNeg, DxxNeg = LSMPS(particle, neighbor_all, neighbor_xneg, neighbor_xpos, neighbor_yneg, neighbor_ypos, neighbor_zneg, neighbor_zpos, R_e, 'x')
+#print('Calculating upwind x derivative')
+#DxPos, DxxPos, DxNeg, DxxNeg = LSMPS(particle, neighbor_all, neighbor_xneg, neighbor_xpos, neighbor_yneg, neighbor_ypos, neighbor_zneg, neighbor_zpos, R_e, 'x')
 
 # Upwind y derivative
-print('Calculating upwind y derivative')
-DyPos, DyyPos, DyNeg, DyyNeg = LSMPS(particle, neighbor_all, neighbor_xneg, neighbor_xpos, neighbor_yneg, neighbor_ypos, neighbor_zneg, neighbor_zpos, R_e, 'y')
+#print('Calculating upwind y derivative')
+#DyPos, DyyPos, DyNeg, DyyNeg = LSMPS(particle, neighbor_all, neighbor_xneg, neighbor_xpos, neighbor_yneg, neighbor_ypos, neighbor_zneg, neighbor_zpos, R_e, 'y')
 
 # Upwind z derivative
-print('Calculating upwind z derivative')
-DzPos, DzzPos, DzNeg, DzzNeg = LSMPS(particle, neighbor_all, neighbor_xneg, neighbor_xpos, neighbor_yneg, neighbor_ypos, neighbor_zneg, neighbor_zpos, R_e, 'z')
+#print('Calculating upwind z derivative')
+#DzPos, DzzPos, DzNeg, DzzNeg = LSMPS(particle, neighbor_all, neighbor_xneg, neighbor_xpos, neighbor_yneg, neighbor_ypos, neighbor_zneg, neighbor_zpos, R_e, 'z')
 
 # CDS derivative
 print('Calculating CDS derivative')
-DxAll, DyAll, DzAll, DxxAll, DyyAll, DzzAll = LSMPS(particle, R_e, neighbor_all, neighbor_xneg, neighbor_xpos, neighbor_yneg, neighbor_ypos, neighbor_zneg, neighbor_zpos, 'all')
-"""
+DxAll, DyAll, DzAll, DxxAll, DyyAll, DzzAll = LSMPS_test(particle, neighbor_all_flattened, index_end, R_e, 'all')
+
 #%%
+"""
 #=============================================================================#
 # Initializing boundary condition
 #=============================================================================#
