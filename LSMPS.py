@@ -31,31 +31,37 @@ def calculate_derivative_CDS(particle, R_e, neighbor_list, index_end, typ):
         index_lsmps = particle.index[~particle.boundary]
     else:
         index_lsmps = particle.index
-        
+    
+    #index_lsmps = np.array([0,1,2])
     n_data = len(neighbor_list)
     
-    data_dx = np.ones(n_data)
-    data_dxx = np.ones(n_data)
-    data_dy = np.ones(n_data)
-    data_dyy = np.ones(n_data)
-    data_dz = np.ones(n_data)
-    data_dzz = np.ones(n_data)
+    data_dx = np.ones((n_data,1), dtype = np.float64)
+    data_dxx = np.ones((n_data,1), dtype = np.float64)
+    data_dy = np.ones((n_data,1), dtype = np.float64)
+    data_dyy = np.ones((n_data,1), dtype = np.float64)
+    data_dz = np.ones((n_data,1), dtype = np.float64)
+    data_dzz = np.ones((n_data,1), dtype = np.float64)
     
     start = int(0)
     
     for i in index_lsmps:
         end = index_end[i]
         
+        #print('start, end = ' + str(start) + ', ' + str(end))
+        
         n_neighbor = end - start
         
         H_rs = np.zeros((7,7))
         M = np.zeros((7,7))
         P = np.zeros((7,1))
-        b_temp = [np.zeros((7,1))] * n_neighbor
+        #b_temp = [np.zeros((7,1))] * n_neighbor
+        b_temp = np.zeros((n_neighbor, 7, 1))
         
-        print('Calculating derivative for particle ' + str(i) + '/' + str(N))
+        #print('Calculating derivative for particle ' + str(i) + '/' + str(N))
         
         neighbor_idx = neighbor_list[start:end]
+        
+        #print(neighbor_idx)
         
         #print(np.dtype(neighbor_idx[0]))
         
@@ -86,8 +92,9 @@ def calculate_derivative_CDS(particle, R_e, neighbor_list, index_end, typ):
         H_rs[5, 5] = 2 * Li**-2 #Dyy
         H_rs[6, 6] = 2 * Li**-2 # Dzz
         
-        for j in range(len(neighbor_idx)):
-            idx_j = neighbor_idx[j]
+        k = 0
+        
+        for idx_j in neighbor_idx:
             x_j = particle.x[idx_j]
             y_j = particle.y[idx_j]
             z_j = particle.z[idx_j]
@@ -117,22 +124,32 @@ def calculate_derivative_CDS(particle, R_e, neighbor_list, index_end, typ):
             else:
                 w_ij = 0
             M = M + w_ij * np.dot(P, P.T)
-            b_temp[j] = w_ij * P
+            b_temp[k] = w_ij * P
+            k += 1
+        #print(M)
         M_inv = np.linalg.inv(M)
         MinvHrs = np.dot(H_rs, M_inv)
-        """
+        
+        k = 0
+        
         for j in range(start, end):
-            idx_j = neighbor_idx[j]
+            idx_j = neighbor_idx[k]
+            #print(idx_i, idx_j)
             #i[indexdx_i].append(idx_j)
-            Eta = np.dot(MinvHrs, b_temp[j])
+            Eta = np.dot(MinvHrs, b_temp[k])
+            #print(Eta)
+            #print(Eta.shape)
+            data_dx[j,0] = Eta[1,0] 
+            data_dxx[j,0] = Eta[2,0]
+            data_dy[j,0] = Eta[3,0]
+            data_dyy[j,0] = Eta[4,0]
+            data_dz[j,0] = Eta[5,0]
+            data_dzz[j,0] = Eta[6,0]
+            k += 1
+        #print(Eta.shape)
             
-            data_dx[j] = Eta[1] 
-            data_dxx[j] = Eta[2]
-            data_dy[j] = Eta[3]
-            data_dyy[j] = Eta[4]
-            data_dz[j] = Eta[5]
-            data_dzz[j] = Eta[6]
-        """
+        start = end
+           
     return data_dx, data_dy, data_dz, data_dxx, data_dyy, data_dzz  
       
 
